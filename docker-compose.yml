@@ -1,0 +1,43 @@
+version: '2.1'
+
+services:
+
+  server:
+    restart: on-failure
+    command: ["/app", "server"]
+    build:
+      context: .
+    ports:
+      - 80:80
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  migrations:
+    image: amacneil/dbmate:v1.6.0
+    entrypoint: /dbmate up
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    volumes:
+      - ./db/migrations/:/db/migrations/
+
+  postgres:
+    image: postgres:11.3
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: database
+      POSTGRES_USER: username
+      POSTGRES_PASSWORD: password
+    volumes:
+      - ./data/postgresql/:/var/lib/postgresql/data/
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U username -d database"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

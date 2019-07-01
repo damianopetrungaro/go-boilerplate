@@ -1,0 +1,5 @@
+data/
+out/
+vendor/
+.env
+wire_gen.go
